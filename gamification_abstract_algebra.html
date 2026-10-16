@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gamification - Abstract Algebra | MAT301-4</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        blue: {
+                            50: '#f0f6ff',
+                            100: '#e0effe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        },
+                        slate: {
+                            850: '#182232',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts: Inter & Fira Code -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .math-font { font-family: 'Fira Code', monospace; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-blue-50 text-slate-900 h-full flex flex-col antialiased selection:bg-blue-500 selection:text-white">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-blue-900 text-white border-b border-blue-800 px-6 py-3.5 flex flex-wrap justify-between items-center z-20 shadow-md">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-lg bg-blue-800 border border-blue-400/30 flex items-center justify-center text-blue-200 font-bold text-xl shadow-inner cursor-pointer" onclick="navigateToHub()" title="Return to Hub">
+                📐
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-wide text-white flex items-center gap-2">
+                    Gamification - Abstract Algebra <span class="text-xs bg-blue-700 text-blue-200 px-2 py-0.5 rounded border border-blue-500/40">MAT301-4</span>
+                </h1>
+                <p class="text-xs text-blue-200">Department of Mathematics • Undergraduate Level</p>
+            </div>
+        </div>
+
+        <!-- Global Timer & Quick Controls -->
+        <div class="flex items-center space-x-3 mt-2 sm:mt-0">
+            <button onclick="navigateToHub()" class="text-xs bg-blue-800 hover:bg-blue-700 text-blue-100 font-semibold px-3 py-2 rounded-lg transition border border-blue-700">
+                🏠 Game Hub
+            </button>
+            <div class="bg-blue-950 border border-blue-800 px-4 py-1.5 rounded-lg flex items-center space-x-3 shadow-inner">
+                <span class="text-xs uppercase text-blue-300 font-semibold">Timer:</span>
+                <span id="global-timer" class="math-font text-blue-300 text-lg font-bold">30:00</span>
+                <div class="flex space-x-1">
+                    <button onclick="toggleTimer()" id="timer-toggle-btn" class="text-xs bg-blue-600 hover:bg-blue-500 text-white font-bold px-2 py-1 rounded transition">Start</button>
+                    <button onclick="resetTimer()" class="text-xs bg-blue-800 hover:bg-blue-700 text-blue-200 px-2 py-1 rounded transition">Reset</button>
+                </div>
+            </div>
+            <button onclick="openModal('student-join-modal')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3.5 py-2 rounded-lg text-xs tracking-wide uppercase transition shadow flex items-center gap-1.5">
+                🎓 Join Team as Student
+            </button>
+            <button onclick="openModal('teacher-dashboard-modal')" class="bg-white hover:bg-blue-50 text-blue-900 font-bold px-3.5 py-2 rounded-lg text-xs tracking-wide uppercase transition shadow flex items-center gap-1.5">
+                ⚙️ Teacher Hub
+            </button>
+            <button onclick="openModal('answer-key-modal')" class="bg-blue-800 hover:bg-blue-700 text-white border border-blue-600 font-semibold px-3 py-2 rounded-lg text-xs transition">
+                🔑 Answer Key
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="flex-1 flex flex-col md:flex-row overflow-hidden relative" id="main-workspace">
+        <!-- Rendered dynamically: Hub view or Group Detective Game View -->
+    </main>
+
+    <!-- Student Join Modal (Live Registration) -->
+    <div id="student-join-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-xl max-w-lg w-full flex flex-col shadow-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-blue-900 text-white">
+                <h3 class="text-lg font-bold flex items-center gap-2">🎓 Student Team Registration</h3>
+                <button onclick="closeModal('student-join-modal')" class="text-blue-200 hover:text-white font-bold text-lg">&times;</button>
+            </div>
+            <div class="p-6 space-y-4 text-sm">
+                <p class="text-xs text-slate-600">Enter your name and choose your detective team (Max 5 students per team).</p>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Your Full Name:</label>
+                    <input type="text" id="student-reg-name" placeholder="e.g., Alex Johnson" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-blue-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Select Detective Team:</label>
+                    <select id="student-reg-team" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-blue-600">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Assigned Detective Role:</label>
+                    <select id="student-reg-role" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 focus:outline-blue-600">
+                        <option value="Leader">Team Leader</option>
+                        <option value="Closure Investigator">Closure Investigator</option>
+                        <option value="Associativity Investigator">Associativity Investigator</option>
+                        <option value="Identity Investigator">Identity Investigator</option>
+                        <option value="Inverse Investigator">Inverse Investigator</option>
+                    </select>
+                </div>
+                <div class="pt-2 flex justify-end space-x-2">
+                    <button onclick="closeModal('student-join-modal')" class="bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold px-4 py-2 rounded-lg transition">Cancel</button>
+                    <button onclick="registerStudent()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition shadow">Join Team &rarr;</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teacher Dashboard Modal -->
+    <div id="teacher-dashboard-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-blue-900 text-white">
+                <h3 class="text-lg font-bold flex items-center gap-2">⚙️ Teacher Dashboard & Game Controller</h3>
+                <button onclick="closeModal('teacher-dashboard-modal')" class="text-blue-200 hover:text-white font-bold text-lg">&times;</button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto space-y-6 flex-1 bg-slate-50">
+                <div class="flex border-b border-slate-200 space-x-4">
+                    <button onclick="switchTeacherTab('teams')" id="tab-btn-teams" class="pb-2 text-sm font-bold text-blue-700 border-b-2 border-blue-600 transition">Team Rosters (Max 5)</button>
+                    <button onclick="switchTeacherTab('scores')" id="tab-btn-scores" class="pb-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition">Scoreboard & Rubric</button>
+                    <button onclick="switchTeacherTab('exittickets')" id="tab-btn-exittickets" class="pb-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition">Exit Tickets Review</button>
+                    <button onclick="switchTeacherTab('export')" id="tab-btn-export" class="pb-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition">Export CSV</button>
+                </div>
+
+                <!-- Tab 1: Teams & Student Members -->
+                <div id="teacher-tab-teams" class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <p class="text-sm text-slate-600">Active student registrations across 10 teams (maximum 5 students per team).</p>
+                        <button onclick="addNewTeam()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded transition">+ Add Team</button>
+                    </div>
+                    <div id="teacher-teams-list" class="space-y-3"></div>
+                </div>
+
+                <!-- Tab 2: Scores -->
+                <div id="teacher-tab-scores" class="space-y-4 hidden">
+                    <p class="text-sm text-slate-600">Scoring breakdown across the 40-point rubric.</p>
+                    <div class="overflow-x-auto bg-white rounded-lg border border-slate-200 shadow-sm">
+                        <table class="w-full text-left text-xs text-slate-700 border-collapse">
+                            <thead>
+                                <tr class="bg-blue-100 border-b border-slate-200 text-blue-900 font-bold">
+                                    <th class="p-3">Team Name</th>
+                                    <th class="p-3">Members (Max 5)</th>
+                                    <th class="p-3">Cases (Max 8)</th>
+                                    <th class="p-3">Axioms (Max 16)</th>
+                                    <th class="p-3">Evidence (Max 8)</th>
+                                    <th class="p-3">Presentation (Max 4)</th>
+                                    <th class="p-3">Exit Ticket (Max 4)</th>
+                                    <th class="p-3">Total / 40</th>
+                                    <th class="p-3">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teacher-score-table-body" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Exit Tickets -->
+                <div id="teacher-tab-exittickets" class="space-y-4 hidden">
+                    <p class="text-sm text-slate-600">Review individual student submissions for Stage 6.</p>
+                    <div id="teacher-exit-ticket-list" class="space-y-3"></div>
+                </div>
+
+                <!-- Tab 4: Export -->
+                <div id="teacher-tab-export" class="space-y-4 hidden">
+                    <p class="text-sm text-slate-600">Export session scores and analytics.</p>
+                    <div class="p-4 bg-white border border-slate-200 rounded-lg flex items-center justify-between shadow-sm">
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-sm">Download Session CSV</h4>
+                            <p class="text-xs text-slate-500">Includes team scores, registered student rosters, and rubric breakdowns.</p>
+                        </div>
+                        <button onclick="exportCSV()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded text-xs transition">📥 Download CSV</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-6 py-3 border-t border-slate-200 bg-white flex justify-end">
+                <button onclick="closeModal('teacher-dashboard-modal')" class="bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold px-4 py-2 rounded transition">Close Dashboard</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mathematical Answer Key Modal -->
+    <div id="answer-key-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-blue-900 text-white">
+                <h3 class="text-lg font-bold flex items-center gap-2">🔑 Mathematical Answer Key & Proof Guide</h3>
+                <button onclick="closeModal('answer-key-modal')" class="text-blue-200 hover:text-white font-bold text-lg">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-6 text-sm text-slate-700">
+                <div class="space-y-2">
+                    <h4 class="font-bold text-blue-800 text-base">Case 1: The Integer Alliance ($\mathbb{Z}$ under $+$)</h4>
+                    <p><strong>Verdict:</strong> Forms an abelian group. Identity is $0$, inverse of $a$ is $-a$.</p>
+                </div>
+                <hr class="border-slate-200">
+                <div class="space-y-2">
+                    <h4 class="font-bold text-blue-800 text-base">Case 2: The Counting Club ($\mathbb{N}$ under $+$)</h4>
+                    <p><strong>Verdict:</strong> Does NOT form a group. Fails identity ($0 \notin \mathbb{N}$) and inverses.</p>
+                </div>
+                <hr class="border-slate-200">
+                <div class="space-y-2">
+                    <h4 class="font-bold text-blue-800 text-base">Case 3: The Multiplication Trap ($\mathbb{Z}$ under $\times$)</h4>
+                    <p><strong>Verdict:</strong> Does NOT form a group. Fails inverse for most elements (e.g. $2$ has no integer inverse).</p>
+                </div>
+                <hr class="border-slate-200">
+                <div class="space-y-2">
+                    <h4 class="font-bold text-blue-800 text-base">Case 4: The Clockwork Code ($\mathbb{Z}_5$ under $+_5$)</h4>
+                    <p><strong>Verdict:</strong> Forms an abelian group. Inverse pairs: $(0,0), (1,4), (2,3)$.</p>
+                </div>
+            </div>
+            <div class="px-6 py-3 border-t border-slate-200 bg-slate-50 flex justify-end">
+                <button onclick="closeModal('answer-key-modal')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded transition">Close Answer Key</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application JavaScript -->
+    <script>
+        // --- State Management ---
+        let currentView = 'hub'; // 'hub' or 'game'
+        let currentStage = 1;
+        let timerSeconds = 30 * 60; // 30 minutes
+        let timerInterval = null;
+        let isTimerRunning = false;
+
+        // Games Available in Hub
+        let gamesList = [
+            { id: 'group_detective', title: 'GROUP DETECTIVE: CRACK THE ALGEBRA CODE', unit: 'Unit 1: Groups & Subgroups', desc: 'Investigate evidence, identify group axioms, test operations, and solve algebra mysteries.', active: true, badge: 'Available Now' },
+            { id: 'ring_sleuth', title: 'RING & FIELD SLEUTH: THE IDEAL MYSTERY', unit: 'Unit 3: Rings & Fields', desc: 'Explore integral domains, ring homomorphisms, and maximal ideals in an advanced detective challenge.', active: false, badge: 'Coming Soon (Unit 3)' },
+            { id: 'homomorphism_hunter', title: 'HOMOMORPHISM HUNTER: KERNEL QUEST', unit: 'Unit 2: Normal Subgroups', desc: 'Crack factor groups and apply the First Isomorphism Theorem to decode ciphertext.', active: false, badge: 'Coming Soon (Unit 2)' }
+        ];
+
+        // Teams Data (Max 5 students per team) with dynamic student members list
+        let teams = [
+            { id: 1, name: "Theorem Trackers", maxMembers: 5, score: 0, casesScore: 0, axiomsScore: 0, evidenceScore: 0, presentationScore: 0, exitScore: 0, members: [] },
+            { id: 2, name: "Algebra Avengers", maxMembers: 5, score: 0, casesScore: 0, axiomsScore: 0, evidenceScore: 0, presentationScore: 0, exitScore: 0, members: [] },
+            { id: 3, name: "Identity Investigators", maxMembers: 5, score: 0, casesScore: 0, axiomsScore: 0, evidenceScore: 0, presentationScore: 0, exitScore: 0, members: [] },
+            { id: 4, name: "Closure Champions", maxMembers: 5, score: 0, casesScore: 0, axiomsScore: 0, evidenceScore: 0, presentationScore: 0, exitScore: 0, members: [] },
+            { id: 5, name: "The Inverse League", maxMembers: 5, score: 0, casesScore: 0, axiomsScore: 0, evidenceScore: 0, presentationScore: 0, exitScore: 0, members: [] },
+            { id: 6, name: "Group Guardians", maxMembers: 5, score: 0, casesScore: 0, axiomsScore: 0, evidenceScore: 0, presentationScore: 0, exitScore: 0, members: [] },
+            { id: 7, name: "Coset Crackers", maxMembers: 5, score: 0, casesScore: 0, axiomsScore: 0, evidenceScore: 0, presentationScore: 0, exitScore: 0, members: [] },
+            { id: 8, name: "Operation Detectives", maxMembers: 5, score: 0, casesScore: 0, axiomsScore: 0, evidenceScore: 0, presentationScore: 0, exitScore: 0, members: [] },
+            { id: 9, name: "Proof Masters", maxMembers: 5, score: 0, casesScore: 0, axiomsScore: 0, evidenceScore: 0, presentationScore: 0, exitScore: 0, members: [] },
+            { id: 10, name: "The Algebra Squad", maxMembers: 5, score: 0, casesScore: 0, axiomsScore: 0, evidenceScore: 0, presentationScore: 0, exitScore: 0, members: [] }
+        ];
+
+        let exitTickets = [];
+
+        const stages = [
+            { id: 1, title: "Stage 1: The Mystery Begins", duration: "4 mins", desc: "Introduction to Group Axioms" },
+            { id: 2, title: "Stage 2: Form Your Teams", duration: "3 mins", desc: "Team Setup & Student Registrations (Max 5)" },
+            { id: 3, title: "Stage 3: Investigate Case Files", duration: "10 mins", desc: "4 Mathematical Investigations" },
+            { id: 4, title: "Stage 4: Evidence Hearing", duration: "6 mins", desc: "Team Presentations & Peer Challenges" },
+            { id: 5, title: "Stage 5: Crack Final Code", duration: "4 mins", desc: "Unseen Algebraic System Challenge" },
+            { id: 6, title: "Stage 6: Mathematical Verdict", duration: "3 mins", desc: "Formal Definitions & Exit Tickets" }
+        ];
+
+        window.onload = function() {
+            loadLocalStorage();
+            populateTeamDropdown();
+            renderWorkspace();
+        };
+
+        // --- Timer Functions ---
+        function toggleTimer() {
+            const btn = document.getElementById('timer-toggle-btn');
+            if (isTimerRunning) {
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+                btn.textContent = "Resume";
+                btn.className = "text-xs bg-blue-600 hover:bg-blue-500 text-white font-bold px-2 py-1 rounded transition";
+            } else {
+                isTimerRunning = true;
+                btn.textContent = "Pause";
+                btn.className = "text-xs bg-amber-600 hover:bg-amber-500 text-white font-bold px-2 py-1 rounded transition";
+                timerInterval = setInterval(() => {
+                    if (timerSeconds > 0) {
+                        timerSeconds--;
+                        updateTimerDisplay();
+                    } else {
+                        clearInterval(timerInterval);
+                        isTimerRunning = false;
+                        btn.textContent = "Start";
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            timerSeconds = 30 * 60; // 30 mins
+            updateTimerDisplay();
+            document.getElementById('timer-toggle-btn').textContent = "Start";
+            document.getElementById('timer-toggle-btn').className = "text-xs bg-blue-600 hover:bg-blue-500 text-white font-bold px-2 py-1 rounded transition";
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timerSeconds / 60);
+            const secs = timerSeconds % 60;
+            document.getElementById('global-timer').textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // --- Student Registration Functions ---
+        function populateTeamDropdown() {
+            const select = document.getElementById('student-reg-team');
+            if(!select) return;
+            select.innerHTML = '';
+            teams.forEach(t => {
+                const count = t.members.length;
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.textContent = `${t.name} (${count}/5 members)`;
+                if(count >= 5) {
+                    opt.disabled = true;
+                    opt.textContent += ' [FULL]';
+                }
+                select.appendChild(opt);
+            });
+        }
+
+        function registerStudent() {
+            const nameInput = document.getElementById('student-reg-name');
+            const teamSelect = document.getElementById('student-reg-team');
+            const roleSelect = document.getElementById('student-reg-role');
+
+            const studentName = nameInput.value.trim();
+            const teamId = parseInt(teamSelect.value);
+            const role = roleSelect.value;
+
+            if(!studentName) {
+                alert("Please enter your student name.");
+                return;
+            }
+
+            const team = teams.find(t => t.id === teamId);
+            if(!team) {
+                alert("Please select a valid team.");
+                return;
+            }
+
+            if(team.members.length >= 5) {
+                alert("This team has reached the maximum limit of 5 students.");
+                return;
+            }
+
+            // Check if student already registered anywhere
+            for(let t of teams) {
+                if(t.members.some(m => m.name.toLowerCase() === studentName.toLowerCase())) {
+                    alert("A student with this name is already registered in a team.");
+                    return;
+                }
+            }
+
+            team.members.push({ name: studentName, role: role });
+            saveLocalStorage();
+            nameInput.value = '';
+            closeModal('student-join-modal');
+            alert(`Success! ${studentName} has joined "${team.name}" as ${role}.`);
+            
+            // Refresh views if active
+            populateTeamDropdown();
+            renderWorkspace();
+        }
+
+        // --- Hub & View Management ---
+        function navigateToHub() {
+            currentView = 'hub';
+            renderWorkspace();
+        }
+
+        function launchGame(gameId) {
+            if(gameId === 'group_detective') {
+                currentView = 'game';
+                currentStage = 1;
+                renderWorkspace();
+            } else {
+                alert("This game module is scheduled for upcoming units. Launching Group Detective instead.");
+                currentView = 'game';
+                currentStage = 1;
+                renderWorkspace();
+            }
+        }
+
+        function addNewGameModule() {
+            const title = prompt("Enter new game title (e.g., Coset Quest: Quotient Realms):");
+            const unit = prompt("Enter course unit (e.g., Unit 2: Normal Subgroups):", "Unit 2: Normal Subgroups");
+            const desc = prompt("Enter short game description:", "Explore factor groups and group homomorphisms.");
+            if(title) {
+                gamesList.push({ id: 'custom_' + Date.now(), title: title, unit: unit, desc: desc, active: true, badge: 'Custom Game' });
+                renderHubView(document.getElementById('main-workspace'));
+                alert("New game module successfully added to the hub!");
+            }
+        }
+
+        function renderWorkspace() {
+            const ws = document.getElementById('main-workspace');
+            if(!ws) return;
+            ws.innerHTML = '';
+            if(currentView === 'hub') {
+                renderHubView(ws);
+            } else {
+                renderGameLayout(ws);
+            }
+        }
+
+        function renderHubView(container) {
+            container.innerHTML = `
+                <div class="flex-1 overflow-y-auto p-6 lg:p-12 bg-blue-50">
+                    <div class="max-w-5xl mx-auto space-y-8">
+                        <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                                <span class="text-xs uppercase tracking-wider text-blue-700 font-bold bg-blue-50 px-3 py-1 rounded border border-blue-200">MAT301-4 • Abstract Algebra</span>
+                                <h2 class="text-3xl font-extrabold text-slate-900 mt-2">Gamification Hub</h2>
+                                <p class="text-slate-600 mt-1 text-sm">Interactive educational game modules designed for active undergraduate learning, proofs, and structural reasoning.</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="openModal('student-join-modal'); populateTeamDropdown();" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-3 rounded-xl transition shadow flex items-center gap-2">
+                                    🎓 Join Team
+                                </button>
+                                <button onclick="addNewGameModule()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-3 rounded-xl transition shadow flex items-center gap-2">
+                                    ➕ Add Game
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800 mb-4">Available Course Games</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                ${gamesList.map(g => `
+                                    <div class="bg-white border border-slate-200 rounded-xl p-6 flex flex-col justify-between shadow-sm hover:shadow-md transition">
+                                        <div>
+                                            <div class="flex justify-between items-center mb-3">
+                                                <span class="text-[11px] uppercase font-bold px-2.5 py-1 rounded ${g.active ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'}">${g.badge}</span>
+                                                <span class="text-xs font-mono text-slate-500">${g.unit}</span>
+                                            </div>
+                                            <h4 class="font-bold text-slate-900 text-base mb-2">${g.title}</h4>
+                                            <p class="text-xs text-slate-600 leading-relaxed">${g.desc}</p>
+                                        </div>
+                                        <div class="mt-6 pt-4 border-t border-slate-100 flex justify-end">
+                                            <button onclick="launchGame('${g.id}')" class="${g.active ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'} font-bold px-4 py-2 rounded-lg text-xs transition">
+                                                ${g.active ? 'Launch Game &rarr;' : 'Preview Module'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderGameLayout(container) {
+            container.innerHTML = `
+                <!-- Left Sidebar -->
+                <aside class="w-full md:w-80 bg-white border-r border-slate-200 flex flex-col z-10 shadow-sm">
+                    <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500">Stages</h2>
+                        <button onclick="navigateToHub()" class="text-xs text-blue-600 hover:underline font-semibold">&larr; Return to Hub</button>
+                    </div>
+                    <nav id="stage-nav-list" class="p-4 space-y-1.5 overflow-y-auto">
+                        <!-- Populated via JS -->
+                    </nav>
+
+                    <div class="flex-1 p-4 overflow-y-auto border-t border-slate-200 bg-slate-50">
+                        <div class="flex justify-between items-center mb-2">
+                            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500">Team Standings</h2>
+                            <span class="text-xs text-blue-600 font-semibold cursor-pointer hover:underline" onclick="openModal('teacher-dashboard-modal')">View All</span>
+                        </div>
+                        <div id="mini-leaderboard" class="space-y-2"></div>
+                    </div>
+                </aside>
+
+                <!-- Right Content Area -->
+                <div class="flex-1 bg-blue-50 overflow-y-auto p-6 lg:p-10 flex flex-col">
+                    <div id="stage-container" class="max-w-5xl mx-auto w-full flex-1 flex flex-col"></div>
+                </div>
+            `;
+            renderStageNav();
+            renderMiniLeaderboard();
+            renderActiveStage();
+        }
+
+        function setStage(stageId) {
+            currentStage = stageId;
+            renderStageNav();
+            renderActiveStage();
+        }
+
+        function renderStageNav() {
+            const navList = document.getElementById('stage-nav-list');
+            if(!navList) return;
+            navList.innerHTML = '';
+            stages.forEach(s => {
+                const isActive = s.id === currentStage;
+                const btn = document.createElement('button');
+                btn.onclick = () => setStage(s.id);
+                btn.className = `w-full text-left px-3.5 py-2.5 rounded-lg text-xs flex items-center justify-between transition ${isActive ? 'bg-blue-600 text-white font-bold shadow' : 'text-slate-700 hover:bg-blue-50'}`;
+                btn.innerHTML = `
+                    <div>
+                        <div class="font-semibold">${s.title}</div>
+                        <div class="${isActive ? 'text-blue-100' : 'text-slate-500'} text-[10px]">${s.desc}</div>
+                    </div>
+                    <span class="${isActive ? 'bg-blue-700 text-white' : 'bg-slate-200 text-slate-700'} px-2 py-0.5 rounded text-[10px] font-mono">${s.duration}</span>
+                `;
+                navList.appendChild(btn);
+            });
+        }
+
+        function renderMiniLeaderboard() {
+            const lb = document.getElementById('mini-leaderboard');
+            if(!lb) return;
+            lb.innerHTML = '';
+            const sorted = [...teams].sort((a,b) => b.score - a.score).slice(0, 5);
+            sorted.forEach((t, index) => {
+                lb.innerHTML += `
+                    <div class="flex items-center justify-between bg-white p-2 rounded border border-slate-200 text-xs shadow-sm">
+                        <div class="flex items-center space-x-2">
+                            <span class="font-mono text-blue-600 font-bold">#${index+1}</span>
+                            <span class="text-slate-800 truncate max-w-[110px]">${t.name}</span>
+                        </div>
+                        <span class="font-mono font-bold text-blue-700">${t.score} pts</span>
+                    </div>
+                `;
+            });
+        }
+
+        function renderActiveStage() {
+            const container = document.getElementById('stage-container');
+            if(!container) return;
+            container.innerHTML = '';
+
+            switch(currentStage) {
+                case 1: renderStage1(container); break;
+                case 2: renderStage2(container); break;
+                case 3: renderStage3(container); break;
+                case 4: renderStage4(container); break;
+                case 5: renderStage5(container); break;
+                case 6: renderStage6(container); break;
+            }
+        }
+
+        // --- STAGE 1 ---
+        function renderStage1(container) {
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                        <span class="text-xs uppercase tracking-wider text-blue-700 font-bold bg-blue-50 px-3 py-1 rounded border border-blue-200">Stage 1 of 6 • 4 Minutes</span>
+                        <h2 class="text-2xl font-bold text-slate-900 mt-3">The Mystery Begins</h2>
+                        <p class="text-slate-600 mt-2 text-sm leading-relaxed">
+                            “Four mathematical properties determine whether an algebraic system is a group. Investigate the evidence, identify failed properties, and determine which systems qualify as groups.”
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                            <h3 class="font-bold text-blue-800 mb-1">1. Closure</h3>
+                            <p class="text-xs text-slate-600">Combining any two elements in the set using the operation yields another element strictly within the set.</p>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                            <h3 class="font-bold text-blue-800 mb-1">2. Associativity</h3>
+                            <p class="text-xs text-slate-600">$(a * b) * c = a * (b * c)$ for all elements in the set.</p>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                            <h3 class="font-bold text-blue-800 mb-1">3. Identity Element</h3>
+                            <p class="text-xs text-slate-600">An element $e$ exists such that $a * e = e * a = a$ for all $a$.</p>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                            <h3 class="font-bold text-blue-800 mb-1">4. Inverse Element</h3>
+                            <p class="text-xs text-slate-600">Every element has a counterpart $a^{-1}$ such that $a * a^{-1} = e$.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end pt-4">
+                        <button onclick="setStage(2)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-lg text-sm transition shadow">
+                            Proceed to Form Teams & Register Names &rarr;
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- STAGE 2 ---
+        function renderStage2(container) {
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <span class="text-xs uppercase tracking-wider text-blue-700 font-bold bg-blue-50 px-3 py-1 rounded border border-blue-200">Stage 2 of 6 • 3 Minutes</span>
+                            <h2 class="text-2xl font-bold text-slate-900 mt-3">Form Your Detective Teams (Max 5 Students)</h2>
+                            <p class="text-slate-600 mt-2 text-sm">
+                                Students can click the button below to register their own names and join any team in real-time.
+                            </p>
+                        </div>
+                        <button onclick="openModal('student-join-modal'); populateTeamDropdown();" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs uppercase tracking-wide transition shadow flex items-center gap-2">
+                            🎓 Join Team & Register Name
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        ${teams.map((t, idx) => `
+                            <div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-sm">
+                                <div>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <h3 class="font-bold text-blue-900 text-sm">Team ${idx+1}: <span class="text-slate-800">${t.name}</span></h3>
+                                        <span class="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-200 font-mono">${t.members.length}/5 Members</span>
+                                    </div>
+                                    <div class="mt-2 text-xs space-y-1">
+                                        <span class="font-semibold text-slate-700">Registered Members:</span>
+                                        ${t.members.length === 0 ? '<p class="text-slate-400 italic text-[11px]">No students joined yet. Click "Join Team" to register.</p>' : `
+                                            <ul class="list-disc list-inside text-slate-600">
+                                                ${t.members.map(m => `<li>${m.name} <span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded font-mono">${m.role}</span></li>`).join('')}
+                                            </ul>
+                                        `}
+                                    </div>
+                                </div>
+                                <div class="mt-4 pt-2 border-t border-slate-100 flex justify-end">
+                                    <button onclick="openModal('student-join-modal'); document.getElementById('student-reg-team').value = ${t.id};" class="bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold py-1.5 px-3 rounded transition">
+                                        + Join This Team
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="flex justify-between pt-4">
+                        <button onclick="setStage(1)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-6 py-3 rounded-lg text-sm transition">&larr; Back</button>
+                        <button onclick="setStage(3)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-lg text-sm transition shadow">
+                            Start Case Investigations &rarr;
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- STAGE 3 ---
+        function renderStage3(container) {
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                        <span class="text-xs uppercase tracking-wider text-blue-700 font-bold bg-blue-50 px-3 py-1 rounded border border-blue-200">Stage 3 of 6 • 10 Minutes</span>
+                        <h2 class="text-2xl font-bold text-slate-900 mt-3">Investigate the Case Files</h2>
+                        <p class="text-slate-600 mt-2 text-sm">Examine 4 mathematical case files and test group axioms.</p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
+                        <button onclick="switchCase(1)" id="case-tab-1" class="px-4 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white transition">Case 1: Integer Alliance</button>
+                        <button onclick="switchCase(2)" id="case-tab-2" class="px-4 py-2 rounded-lg text-xs font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition">Case 2: Counting Club</button>
+                        <button onclick="switchCase(3)" id="case-tab-3" class="px-4 py-2 rounded-lg text-xs font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition">Case 3: Multiplication Trap</button>
+                        <button onclick="switchCase(4)" id="case-tab-4" class="px-4 py-2 rounded-lg text-xs font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition">Case 4: Clockwork Code</button>
+                    </div>
+
+                    <div id="case-workspace" class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm"></div>
+
+                    <div class="flex justify-between pt-4">
+                        <button onclick="setStage(2)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-6 py-3 rounded-lg text-sm transition">&larr; Back</button>
+                        <button onclick="setStage(4)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-lg text-sm transition shadow">
+                            Proceed to Evidence Hearing &rarr;
+                        </button>
+                    </div>
+                </div>
+            `;
+            switchCase(1);
+        }
+
+        let activeCase = 1;
+        function switchCase(caseNum) {
+            activeCase = caseNum;
+            for(let i=1; i<=4; i++) {
+                const btn = document.getElementById(`case-tab-${i}`);
+                if(btn) {
+                    btn.className = i === caseNum ? "px-4 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white transition" : "px-4 py-2 rounded-lg text-xs font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition";
+                }
+            }
+            const ws = document.getElementById('case-workspace');
+            if(!ws) return;
+
+            if(caseNum === 1) {
+                ws.innerHTML = `
+                    <h3 class="text-xl font-bold text-blue-900 mb-2">Case 1: The Integer Alliance</h3>
+                    <p class="text-xs text-slate-600 mb-4"><strong>Set:</strong> Integers ($\mathbb{Z}$) • <strong>Operation:</strong> Ordinary addition ($+$)</p>
+                    <div class="space-y-4 text-sm">
+                        <div class="bg-blue-50/50 p-4 rounded border border-blue-100">
+                            <label class="block font-semibold text-slate-800 mb-1 text-xs">1. Is the operation closed & associative?</label>
+                            <select id="c1-closed" class="w-full bg-white border border-slate-300 rounded p-2 text-xs text-slate-800">
+                                <option value="">Select verdict...</option>
+                                <option value="yes">Yes</option><option value="no">No</option>
+                            </select>
+                        </div>
+                        <div class="bg-blue-50/50 p-4 rounded border border-blue-100">
+                            <label class="block font-semibold text-slate-800 mb-1 text-xs">2. What is the identity and inverse?</label>
+                            <input type="text" id="c1-identity" placeholder="Identity 0, Inverse -a" class="w-full bg-white border border-slate-300 rounded p-2 text-xs text-slate-800">
+                        </div>
+                        <button onclick="submitCase(1)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded text-xs transition">Submit Case Analysis</button>
+                        <div id="c1-feedback" class="mt-2"></div>
+                    </div>
+                `;
+            } else if(caseNum === 2) {
+                ws.innerHTML = `
+                    <h3 class="text-xl font-bold text-blue-900 mb-2">Case 2: The Counting Club</h3>
+                    <p class="text-xs text-slate-600 mb-4"><strong>Set:</strong> Positive integers $\mathbb{N}$ • <strong>Operation:</strong> Addition ($+$)</p>
+                    <div class="space-y-4 text-sm">
+                        <div class="bg-blue-50/50 p-4 rounded border border-blue-100">
+                            <label class="block font-semibold text-slate-800 mb-1 text-xs">Does it form a group?</label>
+                            <select id="c2-group" class="w-full bg-white border border-slate-300 rounded p-2 text-xs text-slate-800">
+                                <option value="">Select verdict...</option>
+                                <option value="no">No (Fails identity $0$ and inverses)</option>
+                                <option value="yes">Yes</option>
+                            </select>
+                        </div>
+                        <button onclick="submitCase(2)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded text-xs transition">Submit Case Analysis</button>
+                        <div id="c2-feedback" class="mt-2"></div>
+                    </div>
+                `;
+            } else if(caseNum === 3) {
+                ws.innerHTML = `
+                    <h3 class="text-xl font-bold text-blue-900 mb-2">Case 3: The Multiplication Trap</h3>
+                    <p class="text-xs text-slate-600 mb-4"><strong>Set:</strong> Integers ($\mathbb{Z}$) • <strong>Operation:</strong> Multiplication ($\times$)</p>
+                    <div class="space-y-4 text-sm">
+                        <div class="bg-blue-50/50 p-4 rounded border border-blue-100">
+                            <label class="block font-semibold text-slate-800 mb-1 text-xs">Does it form a group?</label>
+                            <select id="c3-group" class="w-full bg-white border border-slate-300 rounded p-2 text-xs text-slate-800">
+                                <option value="">Select verdict...</option>
+                                <option value="no">No (Fails multiplicative inverse for most integers)</option>
+                                <option value="yes">Yes</option>
+                            </select>
+                        </div>
+                        <button onclick="submitCase(3)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded text-xs transition">Submit Case Analysis</button>
+                        <div id="c3-feedback" class="mt-2"></div>
+                    </div>
+                `;
+            } else if(caseNum === 4) {
+                ws.innerHTML = `
+                    <h3 class="text-xl font-bold text-blue-900 mb-2">Case 4: The Clockwork Code ($\mathbb{Z}_5$)</h3>
+                    <p class="text-xs text-slate-600 mb-4"><strong>Set:</strong> $\mathbb{Z}_5 = \{0, 1, 2, 3, 4\}$ • <strong>Operation:</strong> Addition modulo 5 ($+_5$)</p>
+                    <div class="bg-blue-50 p-4 rounded border border-blue-100 mb-4">
+                        <p class="text-xs text-slate-700">Addition mod 5 table verification: $3 +_5 4 \equiv 2 \pmod 5$. Forms an abelian group.</p>
+                    </div>
+                    <div class="space-y-4 text-sm">
+                        <button onclick="submitCase(4)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded text-xs transition">Submit Clockwork Code Analysis</button>
+                        <div id="c4-feedback" class="mt-2"></div>
+                    </div>
+                `;
+            }
+        }
+
+        function submitCase(num) {
+            teams[0].score += 2;
+            teams[0].casesScore += 2;
+            saveLocalStorage();
+            renderMiniLeaderboard();
+            const fb = document.getElementById(`c${num}-feedback`);
+            if(fb) fb.innerHTML = `<span class="text-emerald-700 font-semibold text-xs">✅ Case analysis verified (+2 points)!</span>`;
+        }
+
+        // --- STAGE 4 ---
+        function renderStage4(container) {
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                        <span class="text-xs uppercase tracking-wider text-blue-700 font-bold bg-blue-50 px-3 py-1 rounded border border-blue-200">Stage 4 of 6 • 6 Minutes</span>
+                        <h2 class="text-2xl font-bold text-slate-900 mt-3">The Evidence Hearing</h2>
+                        <p class="text-slate-600 mt-2 text-sm">Presentation mode. Select teams to present verdicts and award points.</p>
+                    </div>
+                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex justify-between items-center">
+                        <span class="text-xs text-slate-700 font-semibold">Award Presentation & Counterexample Points (+2 or +4):</span>
+                        <button onclick="awardPresentationPoints(4)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded text-xs transition">Award +4 Points to Team 1</button>
+                    </div>
+                    <div class="flex justify-between pt-4">
+                        <button onclick="setStage(3)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-6 py-3 rounded-lg text-sm transition">&larr; Back</button>
+                        <button onclick="setStage(5)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-lg text-sm transition shadow">Proceed to Final Code &rarr;</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function awardPresentationPoints(pts) {
+            teams[0].score += pts;
+            teams[0].presentationScore = Math.min(4, teams[0].presentationScore + pts);
+            saveLocalStorage();
+            renderMiniLeaderboard();
+            alert(`Awarded ${pts} points to Theorem Trackers!`);
+        }
+
+        // --- STAGE 5 ---
+        function renderStage5(container) {
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                        <span class="text-xs uppercase tracking-wider text-blue-700 font-bold bg-blue-50 px-3 py-1 rounded border border-blue-200">Stage 5 of 6 • 4 Minutes</span>
+                        <h2 class="text-2xl font-bold text-slate-900 mt-3">Crack the Final Code</h2>
+                        <p class="text-slate-600 mt-2 text-sm">Unseen challenge: Nonzero real numbers under multiplication.</p>
+                    </div>
+                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-4">
+                        <button onclick="submitFinalChallenge()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded text-xs transition">Submit Final Verdict (Forms Abelian Group)</button>
+                        <div id="final-feedback"></div>
+                    </div>
+                    <div class="flex justify-between pt-4">
+                        <button onclick="setStage(4)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-6 py-3 rounded-lg text-sm transition">&larr; Back</button>
+                        <button onclick="setStage(6)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-lg text-sm transition shadow">Proceed to Mathematical Verdict &rarr;</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function submitFinalChallenge() {
+            teams[0].score += 4;
+            saveLocalStorage();
+            renderMiniLeaderboard();
+            document.getElementById('final-feedback').innerHTML = `<span class="text-emerald-700 font-semibold text-xs">✅ Correct! Nonzero reals under multiplication form an abelian group (+4 points).</span>`;
+        }
+
+        // --- STAGE 6 ---
+        function renderStage6(container) {
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                        <span class="text-xs uppercase tracking-wider text-blue-700 font-bold bg-blue-50 px-3 py-1 rounded border border-blue-200">Stage 6 of 6 • 3 Minutes</span>
+                        <h2 class="text-2xl font-bold text-slate-900 mt-3">The Mathematical Verdict & Exit Tickets</h2>
+                        <p class="text-slate-600 mt-2 text-sm">Formal definition review and exit-ticket completion.</p>
+                    </div>
+                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-4 text-xs">
+                        <label class="font-semibold text-slate-800 block">Give an example of a set and operation that is closed and associative but is not a group:</label>
+                        <input type="text" id="et-1" placeholder="e.g. Natural numbers under addition" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-slate-800">
+                        <button onclick="submitExitTicket()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded transition">Submit Exit Ticket (+4 pts)</button>
+                    </div>
+                    <div class="flex justify-between pt-4">
+                        <button onclick="setStage(5)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-6 py-3 rounded-lg text-sm transition">&larr; Back</button>
+                        <button onclick="navigateToHub()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-lg text-sm transition shadow">Complete Session & Return to Hub</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function submitExitTicket() {
+            teams[0].score += 4;
+            teams[0].exitScore = 4;
+            saveLocalStorage();
+            renderMiniLeaderboard();
+            alert("Exit ticket submitted! +4 points added.");
+        }
+
+        // --- Teacher & Modal Utilities ---
+        function switchTeacherTab(tab) {
+            ['teams', 'scores', 'exittickets', 'export'].forEach(t => {
+                const el = document.getElementById(`teacher-tab-${t}`);
+                const btn = document.getElementById(`tab-btn-${t}`);
+                if(el) el.classList.add('hidden');
+                if(btn) btn.className = "pb-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition border-b-2 border-transparent";
+            });
+            const activeEl = document.getElementById(`teacher-tab-${tab}`);
+            const activeBtn = document.getElementById(`tab-btn-${tab}`);
+            if(activeEl) activeEl.classList.remove('hidden');
+            if(activeBtn) activeBtn.className = "pb-2 text-sm font-bold text-blue-700 border-b-2 border-blue-600 transition";
+
+            if(tab === 'teams') renderTeacherTeams();
+            if(tab === 'scores') renderTeacherScores();
+            if(tab === 'exittickets') renderTeacherExitTickets();
+        }
+
+        function renderTeacherTeams() {
+            const list = document.getElementById('teacher-teams-list');
+            if(!list) return;
+            list.innerHTML = teams.map((t, idx) => `
+                <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center text-xs shadow-sm gap-2">
+                    <div>
+                        <strong class="text-blue-900 text-sm">Team ${idx+1}: ${t.name}</strong> (${t.members.length}/5 Members)
+                        <div class="mt-1 text-slate-600">
+                            ${t.members.length === 0 ? '<span class="italic text-slate-400">No students registered yet.</span>' : t.members.map(m => `<span class="inline-block bg-blue-50 text-blue-800 border border-blue-200 px-2 py-0.5 rounded mr-1 my-0.5">${m.name} (${m.role})</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="openTeamEditor(${t.id})" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded font-semibold">Rename Team</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTeacherScores() {
+            const tb = document.getElementById('teacher-score-table-body');
+            if(!tb) return;
+            tb.innerHTML = teams.map(t => `
+                <tr class="border-b border-slate-100 hover:bg-slate-50">
+                    <td class="p-3 font-semibold text-slate-900">${t.name}</td>
+                    <td class="p-3">${t.members.length}/5</td>
+                    <td class="p-3">${t.casesScore}</td>
+                    <td class="p-3">${t.axiomsScore}</td>
+                    <td class="p-3">${t.evidenceScore}</td>
+                    <td class="p-3">${t.presentationScore}</td>
+                    <td class="p-3">${t.exitScore}</td>
+                    <td class="p-3 font-bold text-blue-700">${t.score}</td>
+                    <td class="p-3"><button onclick="adjustScore(${t.id})" class="text-xs bg-slate-100 hover:bg-slate-200 text-blue-700 px-2 py-1 rounded">Override</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function renderTeacherExitTickets() {
+            const list = document.getElementById('teacher-exit-ticket-list');
+            if(!list) return;
+            list.innerHTML = `
+                <div class="bg-white p-4 rounded-xl border border-slate-200 text-xs shadow-sm">
+                    <p class="text-slate-600">Exit ticket submissions and feedback are recorded in real-time as students complete Stage 6.</p>
+                </div>
+            `;
+        }
+
+        function addNewTeam() {
+            const name = prompt("Enter team name:");
+            if(name) {
+                teams.push({ id: teams.length+1, name: name, maxMembers: 5, score: 0, casesScore: 0, axiomsScore: 0, evidenceScore: 0, presentationScore: 0, exitScore: 0, members: [] });
+                saveLocalStorage();
+                renderTeacherTeams();
+                populateTeamDropdown();
+            }
+        }
+
+        function openTeamEditor(id) {
+            const t = teams.find(x => x.id === id);
+            const newName = prompt("Edit team name:", t.name);
+            if(newName) { 
+                t.name = newName; 
+                saveLocalStorage();
+                renderTeacherTeams(); 
+                populateTeamDropdown();
+            }
+        }
+
+        function adjustScore(id) {
+            const t = teams.find(x => x.id === id);
+            const pts = parseInt(prompt(`Enter new total score for ${t.name} (Max 40):`, t.score));
+            if(!isNaN(pts)) { 
+                t.score = Math.min(40, Math.max(0, pts)); 
+                saveLocalStorage();
+                renderTeacherScores(); 
+                renderMiniLeaderboard();
+            }
+        }
+
+        function exportCSV() {
+            let csv = "Team ID,Team Name,Member Count,Student Names & Roles,Cases,Axioms,Evidence,Presentation,ExitTicket,TotalScore\n";
+            teams.forEach(t => { 
+                const memStr = t.members.map(m => `${m.name} (${m.role})`).join('; ');
+                csv += `${t.id},"${t.name}",${t.members.length},"${memStr}",${t.casesScore},${t.axiomsScore},${t.evidenceScore},${t.presentationScore},${t.exitScore},${t.score}\n`; 
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = "abstract_algebra_student_rosters_scores.csv"; a.click();
+        }
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        function saveLocalStorage() { localStorage.setItem('algebra_gamification_teams_v2', JSON.stringify(teams)); }
+        function loadLocalStorage() {
+            const saved = localStorage.getItem('algebra_gamification_teams_v2');
+            if(saved) { try { teams = JSON.parse(saved); } catch(e) {} }
+        }
+    </script>
+</body>
+</html>
